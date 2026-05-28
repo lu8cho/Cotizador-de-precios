@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Convertidor $ → Bs · Tasa USDT/Bob (Bitget P2P)</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --accent: #00ff41;
+      --yellow-bitch: #ffff00;
+      --bg: #050505;
+      --surface: #111;
+      --panel: #1a1a1a;
+      --border: #333;
+      --text: #eee;
+      --muted: #888;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .container {
+      max-width: 950px;
+      width: 100%;
+      background: var(--surface);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 1rem 3rem rgba(0, 255, 65, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px var(--accent);
+    }
+
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    .tasa-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1rem 1.8rem;
+      min-width: 220px;
+    }
+
+    .tasa-label {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #ccc;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tasa-input-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .tasa-input-row input {
+      background: #000;
+      color: var(--yellow-bitch);
+      border: 2px solid #555;
+      padding: 0.7rem 0.5rem;
+      font-size: 1.8rem;
+      width: 110px;
+      text-align: center;
+      border-radius: 0.6rem;
+      font-weight: 700;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    .tasa-input-row input.auto-loaded {
+      border-color: #4caf50;
+      box-shadow: 0 0 14px rgba(76, 175, 80, 0.6);
+    }
+
+    .tasa-input-row input.manual {
+      border-color: #f7a600;
+      box-shadow: 0 0 14px rgba(247, 166, 0, 0.6);
+    }
+
+    .tasa-currency {
+      font-weight: 700;
+      color: #ccc;
+      font-size: 1.2rem;
+    }
+
+    .tasa-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-actualizar {
+      background: #2a2a2a;
+      color: #ddd;
+      border: 1px solid #555;
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.5rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .btn-actualizar:hover {
+      background: #3a3a3a;
+      color: var(--yellow-bitch);
+      border-color: var(--yellow-bitch);
+      box-shadow: 0 0 14px rgba(255, 255, 0, 0.5);
+    }
+
+    .btn-actualizar.cargando {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .btn-incremento {
+      background: #2a2a2a;
+      color: #ddd;
+      border: 1px solid #ffaa33;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(2px);
+    }
+
+    .btn-incremento:hover {
+      background: #3a2a1a;
+      color: #ffcc66;
+      border-color: #ffcc33;
+      box-shadow: 0 0 12px rgba(255, 200, 0, 0.5);
+      transform: scale(1.02);
+    }
+
+    .btn-incremento:active {
+      transform: scale(0.98);
+    }
+
+    .estado-tasa {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #555;
+      transition: background 0.3s;
+    }
+
+    .dot.online {
+      background: #4caf50;
+      box-shadow: 0 0 8px #4caf50;
+    }
+
+    .dot.offline {
+      background: #f44336;
+      box-shadow: 0 0 8px #f44336;
+    }
+
+    .color-panel {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 0.8rem 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .color-panel label {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .color-panel input[type="color"] {
+      width: 36px;
+      height: 34px;
+      border: 2px solid #555;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #000;
+      padding: 2px;
+    }
+
+    .btn-reset {
+      background: #3a3a3a;
+      border: none;
+      border-radius: 0.4rem;
+      color: white;
+      font-weight: bold;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-reset:hover { background: #555; }
+
+    textarea {
+      width: 100%;
+      height: 180px;
+      background: #1a1a1a;
+      color: #fff;
+      border: 2px solid #444;
+      padding: 1rem;
+      font-family: inherit;
+      font-size: 1rem;
+      border-radius: 0.8rem;
+      outline: none;
+      transition: border 0.2s;
+      resize: vertical;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+
+    .botones-medio {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .botones-medio>* {
+      flex: 1 1 180px;
+      padding: 0.9rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+
+    .btn-redondeo {
+      background: #2a2a2a;
+      color: #666;
+      gap: 0.6rem;
+      border: 1px solid #444;
+      opacity: 0.7;
+    }
+
+    .btn-redondeo:has(input:checked) {
+      background: #00d2ff;
+      color: #000;
+      opacity: 1;
+      border-color: #00d2ff;
+      box-shadow: 0 4px 12px rgba(0, 210, 255, 0.35);
+    }
+
+    .btn-redondeo input[type="checkbox"] {
+      transform: scale(1.5);
+      accent-color: #000;
+      cursor: pointer;
+    }
+
+    .btn-limpiar {
+      background: #b30000;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(179, 0, 0, 0.5);
+    }
+
+    .btn-limpiar:hover {
+      background: #e60000;
+      box-shadow: 0 0 15px #e60000;
+    }
+
+    #zona-resultado {
+      background: #0a0a0a;
+      padding: 1.5rem;
+      border-radius: 0.8rem;
+      border: 2px dashed #444;
+      white-space: pre-wrap;
+      font-family: 'Impact', 'Arial Black', 'Arial Narrow', sans-serif;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      min-height: auto; 
+      color: #dcdcdc;
+      line-height: 1.6;
+      font-size: 10px; 
+      transition: background-color 0.2s, color 0.2s, font-size 0.1s;
+      word-break: break-word;
+    }
+
+    .texto-chillon {
+      color: var(--yellow-bitch) !important;
+      font-weight: 900;
+      font-size: 0.75em;
+      text-shadow: 0 0 8px rgba(255, 255, 0, 0.7);
+      display: inline-block;
+    }
+
+    .bottom-bar { display: flex; justify-content: center; }
+
+    .zoom-control {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--panel);
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.7rem;
+      border: 1px solid var(--border);
+    }
+
+    .zoom-btn {
+      background: #2a2a2a;
+      color: #ddd;
+      border: 1px solid #444;
+      border-radius: 0.4rem;
+      font-size: 1.3rem;
+      font-weight: bold;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+      user-select: none;
+    }
+
+    .zoom-btn:hover {
+      background: #555;
+      color: var(--yellow-bitch);
+      border-color: var(--yellow-bitch);
+    }
+
+    .zoom-slider {
+      width: 110px;
+      height: 7px;
+      border-radius: 4px;
+      background: #3a3a3a;
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+      cursor: pointer;
+      border: 1px solid #555;
+    }
+
+    .zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      background: var(--yellow-bitch);
+      border-radius: 50%;
+      border: 2px solid #000;
+      box-shadow: 0 0 10px var(--yellow-bitch);
+      cursor: pointer;
+    }
+
+    .zoom-valor {
+      min-width: 55px;
+      font-weight: bold;
+      color: var(--yellow-bitch);
+      font-size: 1rem;
+    }
+
+    .botones-extra {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-extra {
+      flex: 1 1 140px;
+      background: #333;
+      color: #fff;
+      padding: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: none;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: relative;
+    }
+
+    .btn-extra:hover { background: #555; }
+
+    .btn-extra.cargando {
+      color: transparent;
+      pointer-events: none;
+    }
+
+    .btn-extra.cargando::after {
+      content: "⌛ Espera...";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+    }
+
+    .btn-alinear {
+      background: #0d2b1a !important;
+      border: 1px solid #00ff41 !important;
+      color: #00ff41 !important;
+    }
+
+    .btn-alinear:hover {
+      background: #00ff41 !important;
+      color: #000 !important;
+      box-shadow: 0 0 14px rgba(0, 255, 65, 0.55) !important;
+    }
+
+    .btn-alinear.activo {
+      background: #00ff41 !important;
+      color: #000 !important;
+      box-shadow: 0 0 18px rgba(0, 255, 65, 0.8) !important;
+      border-color: #00ff41 !important;
+    }
+
+    .btn-alinear.activo:hover {
+      background: #00cc33 !important;
+      box-shadow: 0 0 22px rgba(0, 255, 65, 0.9) !important;
+    }
+
+    #zona-resultado table {
+      border-collapse: collapse;
+      width: auto;
+    }
+
+    #zona-resultado td {
+      white-space: pre-wrap;
+      vertical-align: baseline;
+      padding: 0;
+    }
+
+    .toast {
+      position: fixed;
+      top: 1.2rem;
+      right: 1.2rem;
+      background: #1a1a1a;
+      color: #fff;
+      padding: 0.8rem 1.4rem;
+      border-radius: 0.6rem;
+      border: 1px solid #4caf50;
+      font-weight: 600;
+      font-size: 0.9rem;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(-15px);
+      transition: all 0.3s;
+      pointer-events: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.error { border-color: #f44336; }
+
+    @media (max-width: 600px) {
+      .container { padding: 1.2rem; }
+      .top-bar { flex-direction: column; gap: 1rem; }
+      .tasa-panel, .color-panel { width: 100%; justify-content: center; }
+      .tasa-input-row input { width: 90px; font-size: 1.5rem; }
+      .btn-incremento { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>⚡ DESTRUCTOR DE PRECIOS $ A BS ⚡</h1>
+
+    <div class="top-bar">
+      <div class="tasa-panel">
+        <span class="tasa-label">💵 1 USDT =</span>
+        <div class="tasa-input-row">
+          <input type="number" id="tasa" step="0.01" value="10" oninput="marcarTasaManual()" placeholder="10.00">
+          <span class="tasa-currency">BOB</span>
+        </div>
+        <div class="tasa-actions">
+          <button class="btn-actualizar" id="btnActualizarTasa" onclick="obtenerTasaAPI()">
+            🔄 Actualizar
+          </button>
+          <div class="estado-tasa" id="tasaStatus">
+            <span class="dot" id="tasaDot"></span>
+            <span id="tasaLabel">Manual</span>
+          </div>
+        </div>
+        <div style="margin-top: 0.5rem; width: 100%; display: flex; justify-content: center;">
+          <button class="btn-incremento" id="btnIncrementarDiez" onclick="incrementarCotizacion()">
+            ✚ Aumentar 0.10 Bs
+          </button>
+        </div>
+      </div>
+
+      <div class="color-panel">
+        <label>🎨 Fondo <input type="color" id="bgResultColor" value="#0a0a0a"></label>
+        <label>✏️ Texto <input type="color" id="textResultColor" value="#dcdcdc"></label>
+        <button class="btn-reset" id="resetColorsBtn">↺ Reset</button>
+      </div>
+    </div>
+
+    <textarea id="entrada" placeholder="Pega tu lista de precios en dólares aquí..." oninput="procesar()"></textarea>
+
+    <div class="botones-medio">
+      <label class="btn-redondeo" title="Redondea a .00 o .50 para ganar, nunca perder">
+        <input type="checkbox" id="chkRedondear" checked onchange="procesar()">
+        Redondeo (↑)
+      </label>
+      <button class="btn-limpiar" onclick="limpiarTodo()">🗑️ Borrar</button>
+    </div>
+
+    <div id="zona-resultado">Esperando que pegues texto, cabrón...</div>
+
+    <div class="bottom-bar">
+      <div class="zoom-control">
+        <button class="zoom-btn" onclick="cambiarZoom(-0.5)">−</button>
+        <input type="range" class="zoom-slider" id="zoomRange" min="8" max="60" value="10" step="0.5" oninput="actualizarZoom()" onchange="this.blur()">
+        <button class="zoom-btn" onclick="cambiarZoom(0.5)">+</button>
+        <span class="zoom-valor" id="zoomValor">10px</span>
+      </div>
+    </div>
+
+    <div class="botones-extra">
+      <button class="btn-extra" onclick="copiarTexto()">📋 Copiar Texto</button>
+      <button class="btn-extra btn-alinear" onclick="alinearPrecios()">📐 Alinear</button>
+      <button class="btn-extra" id="btnImagen" onclick="guardarImagen()">📸 Guardar Imagen</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (function() {
+      const zonaResultado = document.getElementById('zona-resultado');
+      const bgColorPicker = document.getElementById('bgResultColor');
+      const textColorPicker = document.getElementById('textResultColor');
+      const resetColorsBtn = document.getElementById('resetColorsBtn');
+      const tasaInput = document.getElementById('tasa');
+      const chkRedondear = document.getElementById('chkRedondear');
+      const entradaTextarea = document.getElementById('entrada');
+      const zoomRange = document.getElementById('zoomRange');
+      const zoomValor = document.getElementById('zoomValor');
+      const btnActualizarTasa = document.getElementById('btnActualizarTasa');
+      const tasaDot = document.getElementById('tasaDot');
+      const tasaLabels = document.getElementById('tasaLabel');
+      const toast = document.getElementById('toast');
+
+      let tasaOrigen = 'manual';     
+      let intervaloActualizacion = null;
+      let estaAlineado = false;
+      let htmlOriginalSinAlinear = null;
+
+      function mostrarToast(mensaje, esError = false) {
+        toast.textContent = mensaje;
+        toast.className = 'toast ' + (esError ? 'error' : '');
+        void toast.offsetWidth;
+        toast.classList.add('show');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.remove('show'), 3500);
+      }
+
+      function setModoManualCompleto() {
+        if (intervaloActualizacion) {
+          clearInterval(intervaloActualizacion);
+          intervaloActualizacion = null;
+        }
+        if (tasaOrigen !== 'manual') {
+          tasaOrigen = 'manual';
+        }
+        tasaDot.className = 'dot';           
+        tasaLabels.textContent = 'Manual';
+        tasaInput.classList.add('manual');
+        tasaInput.classList.remove('auto-loaded');
+      }
+
+      function procesar() {
+        const texto = entradaTextarea.value;
+        const tasa = parseFloat(tasaInput.value);
+        const redondear = chkRedondear.checked;
+
+        if (!texto.trim()) {
+          zonaResultado.innerHTML = '<span style="color:#555;">Esperando que pegues texto, cabrón...</span>';
+          return;
+        }
+
+        if (!tasa || tasa <= 0) {
+          zonaResultado.innerHTML = '<span style="color:#ff0000; font-weight:bold;">¡Pon una tasa válida o actualiza desde la API!</span>';
+          return;
+        }
+
+        const regexMoneda = /(?:\$|USD|usd)\s?([\d,.]+)|([\d,.]+)\s?(?:\$|USD|usd)/g;
+        const resultado = texto.replace(regexMoneda, (match, p1, p2) => {
+          const valorStr = p1 || p2;
+          if (!valorStr) return match;
+          const numLimpio = valorStr.replace(/\.(?=\d{3})/g, '').replace(',', '.');
+          const usd = parseFloat(numLimpio);
+          if (isNaN(usd)) return match;
+          let bs = usd * tasa;
+          if (redondear) {
+            bs = Math.ceil(bs * 2) / 2;
+          }
+          const bsStr = bs.toFixed(2).replace('.', ',');
+          return `<span class="texto-chillon">${bsStr} Bs</span>`;
+        });
+        zonaResultado.innerHTML = resultado;
+        estaAlineado = false;
+        htmlOriginalSinAlinear = null;
+        const btnAl = document.querySelector('.btn-alinear');
+        if (btnAl) btnAl.classList.remove('activo');
+      }
+
+      window.marcarTasaManual = function() {
+        if (tasaOrigen === 'auto') {
+          setModoManualCompleto();
+        } else {
+          if (intervaloActualizacion) {
+            clearInterval(intervaloActualizacion);
+            intervaloActualizacion = null;
+          }
+          if (!tasaInput.classList.contains('manual')) tasaInput.classList.add('manual');
+          tasaInput.classList.remove('auto-loaded');
+          tasaDot.className = 'dot';
+          tasaLabels.textContent = 'Manual';
+        }
+        procesar();
+      };
+
+      window.incrementarCotizacion = function() {
+        let current = parseFloat(tasaInput.value);
+        if (isNaN(current)) current = 0;
+        let nuevoValor = current + 0.10;
+        nuevoValor = Math.round(nuevoValor * 100) / 100;
+        tasaInput.value = nuevoValor.toFixed(2);
+        
+        setModoManualCompleto();
+        tasaInput.classList.add('manual');
+        tasaInput.classList.remove('auto-loaded');
+        procesar();
+        mostrarToast(`💸 Cotización +0.10 → ${nuevoValor.toFixed(2)} BOB`);
+      };
+
+      const API_URL = 'https://criptoya.com/api/bitgetp2p/USDT/BOB/0.1';
+
+      async function fetchTasaDirecta() {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        try {
+          const res = await fetch(API_URL, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          if (!data || typeof data.ask !== 'number' || isNaN(data.ask)) {
+            throw new Error('Respuesta inválida (ask no es número)');
+          }
+          return data.ask;
+        } catch (err) {
+          clearTimeout(timeoutId);
+          throw err;
+        }
+      }
+
+      function aplicarTasa(precio) {
+        const precioStr = precio.toFixed(2);
+        tasaInput.value = precioStr;
+        
+        if (intervaloActualizacion) {
+          clearInterval(intervaloActualizacion);
+          intervaloActualizacion = null;
+        }
+        tasaOrigen = 'auto';
+        tasaDot.className = 'dot online';
+        tasaLabels.textContent = 'Bitget P2P ✓';
+        tasaInput.classList.add('auto-loaded');
+        tasaInput.classList.remove('manual');
+        procesar();
+        
+        if (intervaloActualizacion) clearInterval(intervaloActualizacion);
+        intervaloActualizacion = setInterval(() => {
+          if (tasaOrigen === 'auto') {
+            obtenerTasaSilenciosa();
+          }
+        }, 45000);
+        
+        mostrarToast(`✅ Tasa actualizada: 1 USDT = ${precioStr} BOB`);
+      }
+
+      async function obtenerTasaAPI() {
+        const btn = btnActualizarTasa;
+        btn.classList.add('cargando');
+        btn.textContent = '⏳';
+        tasaDot.className = 'dot';
+        tasaLabels.textContent = 'Consultando...';
+
+        try {
+          const precio = await fetchTasaDirecta();
+          aplicarTasa(precio);
+        } catch (err) {
+          console.error('Error al obtener tasa (directo):', err);
+          tasaDot.className = 'dot offline';
+          tasaLabels.textContent = 'Error API';
+          tasaInput.classList.add('manual');
+          tasaInput.classList.remove('auto-loaded');
+          tasaOrigen = 'manual';
+          if (intervaloActualizacion) {
+            clearInterval(intervaloActualizacion);
+            intervaloActualizacion = null;
+          }
+          mostrarToast('⚠️ No se pudo obtener la tasa. Verifica conexión o la API.', true);
+        } finally {
+          btn.classList.remove('cargando');
+          btn.textContent = '🔄 Actualizar';
+        }
+      }
+
+      async function obtenerTasaSilenciosa() {
+        if (tasaOrigen !== 'auto') return;
+        try {
+          const precio = await fetchTasaDirecta();
+          const valorActual = parseFloat(tasaInput.value);
+          if (Math.abs(valorActual - precio) > 0.005) {
+            tasaInput.value = precio.toFixed(2);
+            if (tasaOrigen === 'auto') {
+              tasaDot.className = 'dot online';
+              tasaLabels.textContent = 'Bitget P2P ✓';
+              tasaInput.classList.add('auto-loaded');
+              tasaInput.classList.remove('manual');
+            }
+            procesar();
+            mostrarToast(`🔄 Tasa actualizada automáticamente: ${precio.toFixed(2)} BOB`);
+          }
+        } catch (err) {
+          console.warn('Actualización silenciosa fallida:', err.message);
+        }
+      }
+
+      function aplicarColores() {
+        zonaResultado.style.backgroundColor = bgColorPicker.value;
+        zonaResultado.style.color = textColorPicker.value;
+      }
+      bgColorPicker.addEventListener('input', aplicarColores);
+      textColorPicker.addEventListener('input', aplicarColores);
+      resetColorsBtn.addEventListener('click', () => {
+        bgColorPicker.value = '#0a0a0a';
+        textColorPicker.value = '#dcdcdc';
+        aplicarColores();
+      });
+
+      function actualizarZoom() {
+        const size = parseFloat(zoomRange.value).toFixed(1) + 'px';
+        zonaResultado.style.fontSize = size;
+        zoomValor.textContent = size;
+      }
+      function cambiarZoom(delta) {
+        let val = parseFloat(zoomRange.value) + delta;
+        const min = parseFloat(zoomRange.min);
+        const max = parseFloat(zoomRange.max);
+        val = Math.min(max, Math.max(min, val));
+        val = Math.round(val * 10) / 10;
+        zoomRange.value = val;
+        actualizarZoom();
+        zoomRange.blur();
+      }
+      zoomRange.addEventListener('input', actualizarZoom);
+      zoomRange.addEventListener('change', () => zoomRange.blur());
+
+      window.limpiarTodo = function() {
+        entradaTextarea.value = '';
+        zonaResultado.innerHTML = '<span style="color:#555;">Esperando que pegues texto, cabrón...</span>';
+        estaAlineado = false;
+        htmlOriginalSinAlinear = null;
+        const btnAl = document.querySelector('.btn-alinear');
+        if (btnAl) btnAl.classList.remove('activo');
+      };
+
+      function copiarFallback(texto) {
+        const area = document.createElement('textarea');
+        area.value = texto;
+        area.style.position = 'fixed';
+        area.style.left = '-9999px';
+        area.style.top = '-9999px';
+        area.setAttribute('readonly', '');
+        document.body.appendChild(area);
+        area.focus();
+        area.select();
+        try {
+          const ok = document.execCommand('copy');
+          mostrarToast(ok ? '📋 ¡Texto copiado!' : '⚠️ No se pudo copiar.', !ok);
+        } catch (e) {
+          mostrarToast('⚠️ Error al copiar. Hazlo manualmente.', true);
+        }
+        document.body.removeChild(area);
+      }
+
+      window.copiarTexto = function() {
+        const textoLimpio = zonaResultado.innerText;
+        if (textoLimpio.includes('Esperando que pegues') || textoLimpio.includes('¡Pon una tasa')) {
+          alert('¡No hay nada qué copiar!');
+          return;
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(textoLimpio)
+            .then(() => mostrarToast('📋 ¡Texto copiado!'))
+            .catch(() => copiarFallback(textoLimpio));
+        } else {
+          copiarFallback(textoLimpio);
+        }
+      };
+
+      window.alinearPrecios = function() {
+        const btnAlinear = document.querySelector('.btn-alinear');
+        const html = zonaResultado.innerHTML;
+
+        if (html.includes('Esperando que pegues') || html.includes('¡Pon una tasa')) {
+          mostrarToast('⚠️ No hay nada que alinear.', true);
+          return;
+        }
+
+        // TOGGLE OFF: restaurar HTML original
+        if (estaAlineado) {
+          if (htmlOriginalSinAlinear !== null) {
+            zonaResultado.innerHTML = htmlOriginalSinAlinear;
+          }
+          estaAlineado = false;
+          htmlOriginalSinAlinear = null;
+          btnAlinear.classList.remove('activo');
+          mostrarToast('📐 Alineación desactivada.');
+          return;
+        }
+
+        if (!html.includes('texto-chillon')) {
+          mostrarToast('⚠️ Sin precios convertidos para alinear.', true);
+          return;
+        }
+
+        // Guardar HTML original antes de alinear
+        htmlOriginalSinAlinear = html;
+
+        const lines = html.split('\n');
+        const rowsHtml = lines.map(line => {
+          const idx = line.indexOf('<span class="texto-chillon">');
+          if (idx !== -1) {
+            const before = line.substring(0, idx);
+            const rest = line.substring(idx);
+            return `<tr>` +
+              `<td style="padding-right:0.9em">${before}</td>` +
+              `<td>${rest}</td>` +
+              `</tr>`;
+          } else {
+            return `<tr>` +
+              `<td colspan="2">${line || '\u00A0'}</td>` +
+              `</tr>`;
+          }
+        });
+
+        zonaResultado.innerHTML = `<table>${rowsHtml.join('')}</table>`;
+        estaAlineado = true;
+        btnAlinear.classList.add('activo');
+        mostrarToast('📐 ¡Precios alineados!');
+      };
+
+      window.guardarImagen = function() {
+        const btnImg = document.getElementById('btnImagen');
+        if (zonaResultado.innerText.includes('Esperando que pegues') || zonaResultado.innerText.includes('¡Pon una tasa')) {
+          alert('¡Convierte algo antes de capturar!');
+          return;
+        }
+        btnImg.classList.add('cargando');
+        html2canvas(zonaResultado, {
+          backgroundColor: null,
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true
+        }).then(canvas => {
+          canvas.toBlob(blob => {
+            if (!blob) {
+              alert('Error al generar la imagen.');
+              btnImg.classList.remove('cargando');
+              return;
+            }
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.download = 'Precios_Bolivia_Lista.png';
+            a.href = url;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+            btnImg.classList.remove('cargando');
+            mostrarToast('📸 Imagen guardada.');
+          }, 'image/png');
+        }).catch(err => {
+          console.error('html2canvas error:', err);
+          alert('Error técnico al generar la imagen.');
+          btnImg.classList.remove('cargando');
+        });
+      };
+
+      window.actualizarZoom = actualizarZoom;
+      window.cambiarZoom = cambiarZoom;
+      window.procesar = procesar;
+      window.obtenerTasaAPI = obtenerTasaAPI;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        aplicarColores();
+        actualizarZoom();
+        setModoManualCompleto();
+        tasaInput.classList.add('manual');
+        tasaInput.classList.remove('auto-loaded');
+        setTimeout(() => {
+          obtenerTasaAPI().catch(() => {});
+        }, 600);
+      });
+
+      window.addEventListener('beforeunload', () => {
+        if (intervaloActualizacion) clearInterval(intervaloActualizacion);
+      });
+    })();
+  </script>
+</body>
+</html>
