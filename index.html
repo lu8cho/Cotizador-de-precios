@@ -260,11 +260,14 @@
       border: 2px solid #444;
       padding: 1rem;
       font-family: inherit;
-      font-size: 1rem;
+      font-size: 0.85rem;
       border-radius: 0.8rem;
       outline: none;
       transition: border 0.2s;
       resize: vertical;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
     }
 
     textarea:focus { border-color: var(--accent); }
@@ -894,23 +897,25 @@
         const rowsHtml = lines.map(line => {
           const idx = line.indexOf('<span class="texto-chillon">');
           if (idx !== -1) {
+            // Línea con precio: Se divide en dos columnas (Nombre a la izquierda, Precio a la derecha)
             const before = line.substring(0, idx);
             const rest = line.substring(idx);
             return `<tr>` +
-              `<td style="padding-right:0.9em">${before}</td>` +
+              `<td style="padding-right:1.5em">${before}</td>` +
               `<td>${rest}</td>` +
               `</tr>`;
           } else {
+            // Línea sin precio (Título o Categoría): Se centra ocupando ambas columnas de la tabla
             return `<tr>` +
-              `<td colspan="2">${line || '\u00A0'}</td>` +
+              `<td colspan="2" style="text-align: center; padding-top: 0.8em; padding-bottom: 0.3em;">${line || '\u00A0'}</td>` +
               `</tr>`;
           }
         });
 
-        zonaResultado.innerHTML = `<table>${rowsHtml.join('')}</table>`;
+        zonaResultado.innerHTML = `<table style="width: 100%;">${rowsHtml.join('')}</table>`;
         estaAlineado = true;
         btnAlinear.classList.add('activo');
-        mostrarToast('📐 ¡Precios alineados!');
+        mostrarToast('📐 ¡Precios y títulos alineados!');
       };
 
       window.guardarImagen = function() {
