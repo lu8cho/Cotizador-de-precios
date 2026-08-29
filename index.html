@@ -466,6 +466,7 @@
 
       let tasaOrigen = 'manual';     
       let intervaloActualizacion = null;
+      let patronActual = null; // guarda los parámetros del patrón de fondo actualmente aplicado (para poder "hornearlo" a imagen real al exportar)
 
       function mostrarToast(mensaje, esError = false) {
         toast.textContent = mensaje;
@@ -529,6 +530,7 @@
         // Determinación matemática del patrón base (4 tipos)
         const tipoPatron = Math.floor(Math.random() * 4);
         let bgImage = '';
+        let grados1 = 0, grados2 = 0; // declaradas aquí (no dentro del switch) para que sigan existiendo fuera y se puedan guardar en patronActual
 
         switch(tipoPatron) {
             case 0: // Patrón Lineal Matemático
@@ -538,8 +540,8 @@
                 bgImage = `repeating-radial-gradient(circle at ${posX}% ${posY}%, ${c1}, ${c1} ${grosor1}px, ${c2} ${grosor1}px, ${c2} ${grosor2}px)`;
                 break;
             case 2: // Patrón Cónico (Efecto sol/mosaico angular)
-                const grados1 = Math.floor(Math.random() * 15) + 5; // 5° a 20°
-                const grados2 = grados1 + Math.floor(Math.random() * 15) + 5; // Siguiente ángulo
+                grados1 = Math.floor(Math.random() * 15) + 5; // 5° a 20°
+                grados2 = grados1 + Math.floor(Math.random() * 15) + 5; // Siguiente ángulo
                 bgImage = `repeating-conic-gradient(from ${angulo}deg at ${posX}% ${posY}%, ${c1} 0deg, ${c1} ${grados1}deg, ${c2} ${grados1}deg, ${c2} ${grados2}deg)`;
                 break;
             case 3: // Patrón de Cuadrícula Cruzada Matemática (2 capas)
@@ -555,7 +557,111 @@
 
         zonaResultado.style.backgroundColor = c1; 
         zonaResultado.style.backgroundImage = bgImage;
+        zonaResultado.style.backgroundSize = '';
+        zonaResultado.style.backgroundRepeat = '';
         zonaResultado.style.color = textColor;
+
+        // Guardamos los parámetros exactos de este patrón (no solo el string CSS) para poder
+        // redibujarlo con Canvas al exportar la imagen. html2canvas NO soporta bien los gradientes
+        // "repeating-*" (ni lineales, ni radiales, ni cónicos), así que al guardar la imagen hay
+        // que "hornear" este mismo patrón a un PNG real en vez de confiar en el CSS.
+        patronActual = { tipoPatron, c1, c2, c3, angulo, grosor1, grosor2, posX, posY, grados1, grados2 };
+      }
+
+      // ---- Dibuja el mismo patrón de fondo pero como imagen real (Canvas), para exportar ----
+
+      function dibujarRayas(ctx, ancho, alto, anguloGrados, grosor1, grosor2, colorA, colorB, soloColorB) {
+        const diag = Math.ceil(Math.sqrt(ancho * ancho + alto * alto)) + grosor2 * 2;
+        ctx.save();
+        ctx.translate(ancho / 2, alto / 2);
+        ctx.rotate(anguloGrados * Math.PI / 180);
+        let y = -diag / 2;
+        let i = 0;
+        while (y < diag / 2) {
+          const franja = (i % 2 === 0) ? grosor1 : (grosor2 - grosor1);
+          const esSegundoColor = i % 2 === 1;
+          if (!soloColorB || esSegundoColor) {
+            ctx.fillStyle = esSegundoColor ? colorB : colorA;
+            ctx.fillRect(-diag / 2, y - 0.5, diag, franja + 1); // +1px de margen para que no queden líneas sin pintar por redondeo
+          }
+          y += franja;
+          i++;
+        }
+        ctx.restore();
+      }
+
+      function dibujarAnillos(ctx, ancho, alto, posX, posY, grosor1, grosor2, c2) {
+        const cx = ancho * posX / 100;
+        const cy = alto * posY / 100;
+        const distEsquina = Math.max(
+          Math.hypot(cx, cy),
+          Math.hypot(ancho - cx, cy),
+          Math.hypot(cx, alto - cy),
+          Math.hypot(ancho - cx, alto - cy)
+        );
+        const maxR = Math.ceil(distEsquina) + grosor2;
+        let r = 0;
+        let i = 0;
+        while (r < maxR) {
+          const franja = (i % 2 === 0) ? grosor1 : (grosor2 - grosor1);
+          if (i % 2 === 1) {
+            ctx.beginPath();
+            ctx.fillStyle = c2;
+            ctx.arc(cx, cy, r + franja, 0, Math.PI * 2);
+            ctx.arc(cx, cy, Math.max(r - 0.5, 0), 0, Math.PI * 2, true);
+            ctx.fill('evenodd');
+          }
+          r += franja;
+          i++;
+        }
+      }
+
+      function dibujarConico(ctx, ancho, alto, posX, posY, anguloInicial, grados1, grados2, c1, c2) {
+        const cx = ancho * posX / 100;
+        const cy = alto * posY / 100;
+        const maxR = Math.ceil(Math.sqrt(ancho * ancho + alto * alto)) + 10;
+        const periodo = grados2;
+        let anguloActual = anguloInicial;
+        let i = 0;
+        while (anguloActual < anguloInicial + 360 + periodo) {
+          const franja = (i % 2 === 0) ? grados1 : (grados2 - grados1);
+          const a0 = anguloActual * Math.PI / 180;
+          const a1 = (anguloActual + franja) * Math.PI / 180;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, maxR, a0, a1);
+          ctx.closePath();
+          ctx.fillStyle = (i % 2 === 0) ? c1 : c2;
+          ctx.fill();
+          anguloActual += franja;
+          i++;
+        }
+      }
+
+      function generarPatronDataURL(ancho, alto, p) {
+        ancho = Math.max(1, Math.round(ancho));
+        alto = Math.max(1, Math.round(alto));
+        const canvas = document.createElement('canvas');
+        canvas.width = ancho;
+        canvas.height = alto;
+        const ctx = canvas.getContext('2d');
+
+        // Base: todo pintado con c1 primero, así los patrones solo necesitan pintar "encima" el segundo color
+        ctx.fillStyle = p.c1;
+        ctx.fillRect(0, 0, ancho, alto);
+
+        if (p.tipoPatron === 0) {
+          dibujarRayas(ctx, ancho, alto, p.angulo, p.grosor1, p.grosor2, p.c1, p.c2);
+        } else if (p.tipoPatron === 1) {
+          dibujarAnillos(ctx, ancho, alto, p.posX, p.posY, p.grosor1, p.grosor2, p.c2);
+        } else if (p.tipoPatron === 2) {
+          dibujarConico(ctx, ancho, alto, p.posX, p.posY, p.angulo, p.grados1, p.grados2, p.c1, p.c2);
+        } else if (p.tipoPatron === 3) {
+          dibujarRayas(ctx, ancho, alto, p.angulo + 90, p.grosor1, p.grosor2, p.c2, p.c3); // capa de fondo (cruzada)
+          dibujarRayas(ctx, ancho, alto, p.angulo, p.grosor1, p.grosor2, null, p.c1, true); // capa encima, dejando "huecos"
+        }
+
+        return canvas.toDataURL('image/png');
       }
 
       function procesar() {
@@ -565,9 +671,8 @@
 
         if (!texto.trim()) {
           zonaResultado.style.fontSize = '16px';
-          zonaResultado.style.backgroundImage = 'none';
-          zonaResultado.style.backgroundColor = '#0a0a0a';
-          zonaResultado.style.color = '#dcdcdc';
+          // El fondo/patrón YA NO se toca aquí: debe mantenerse igual hasta que el usuario
+          // presione "Cambiar Fondo", sin importar que se borre o cambie el texto.
           zonaResultado.innerHTML = '<span style="color:#555;">Esperando que pegues texto, cabrón...</span>';
           return;
         }
@@ -747,9 +852,7 @@
       window.limpiarTodo = function() {
         entradaTextarea.value = '';
         zonaResultado.style.fontSize = '16px';
-        zonaResultado.style.backgroundImage = 'none';
-        zonaResultado.style.backgroundColor = '#0a0a0a';
-        zonaResultado.style.color = '#dcdcdc';
+        // Igual que en procesar(): el fondo/patrón NO se toca, se queda como estaba.
         zonaResultado.innerHTML = '<span style="color:#555;">Esperando que pegues texto, cabrón...</span>';
       };
 
@@ -794,6 +897,34 @@
           return;
         }
         btnImg.classList.add('cargando');
+
+        // html2canvas no renderiza bien los fondos "repeating-linear/radial/conic-gradient"
+        // (es una limitación conocida de la librería: el degradado simplemente no aparece y
+        // solo queda el backgroundColor plano). Por eso, justo antes de capturar, "horneamos"
+        // el patrón actual a un PNG real con Canvas y lo ponemos como fondo temporalmente.
+        // Al terminar la captura, se restaura el fondo original (el CSS en vivo no cambia).
+        const fondoOriginal = {
+          backgroundImage: zonaResultado.style.backgroundImage,
+          backgroundSize: zonaResultado.style.backgroundSize,
+          backgroundRepeat: zonaResultado.style.backgroundRepeat
+        };
+
+        if (patronActual) {
+          const factor = 2; // misma escala que scale:2 de html2canvas, para que no se vea borroso
+          const anchoReal = zonaResultado.offsetWidth;
+          const altoReal = zonaResultado.offsetHeight;
+          const dataURL = generarPatronDataURL(anchoReal * factor, altoReal * factor, patronActual);
+          zonaResultado.style.backgroundImage = `url(${dataURL})`;
+          zonaResultado.style.backgroundSize = `${anchoReal}px ${altoReal}px`;
+          zonaResultado.style.backgroundRepeat = 'no-repeat';
+        }
+
+        const restaurarFondo = () => {
+          zonaResultado.style.backgroundImage = fondoOriginal.backgroundImage;
+          zonaResultado.style.backgroundSize = fondoOriginal.backgroundSize;
+          zonaResultado.style.backgroundRepeat = fondoOriginal.backgroundRepeat;
+        };
+
         html2canvas(zonaResultado, {
           backgroundColor: null,
           scale: 2,
@@ -801,6 +932,7 @@
           useCORS: true,
           allowTaint: true
         }).then(canvas => {
+          restaurarFondo();
           canvas.toBlob(blob => {
             if (!blob) {
               alert('Error al generar la imagen.');
@@ -817,6 +949,7 @@
             mostrarToast('📸 Imagen guardada.');
           }, 'image/png');
         }).catch(err => {
+          restaurarFondo();
           console.error('html2canvas error:', err);
           alert('Error técnico al generar la imagen.');
           btnImg.classList.remove('cargando');
