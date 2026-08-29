@@ -9,7 +9,7 @@
   <style>
     :root {
       --accent: #007bb5; /* Celeste oscuro */
-      --yellow-bitch: #ffff00;
+      --yellow-bitch: #ffff00; /* Amarillo puro */
       --bg: #050505;
       --surface: #111;
       --panel: #1a1a1a;
@@ -208,50 +208,6 @@
       box-shadow: 0 0 8px #f44336;
     }
 
-    .color-panel {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 0.8rem 1.5rem;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .color-panel label {
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: #ccc;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    .color-panel input[type="color"] {
-      width: 36px;
-      height: 34px;
-      border: 2px solid #555;
-      border-radius: 6px;
-      cursor: pointer;
-      background: #000;
-      padding: 2px;
-    }
-
-    .btn-reset {
-      background: #3a3a3a;
-      border: none;
-      border-radius: 0.4rem;
-      color: white;
-      font-weight: bold;
-      padding: 0.5rem 0.9rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-reset:hover { background: #555; }
-
     textarea {
       width: 100%;
       height: 180px;
@@ -315,6 +271,19 @@
       cursor: pointer;
     }
 
+    .btn-fondo {
+      background: #2a2a2a;
+      color: #aaa;
+      border: 1px solid #444;
+    }
+
+    .btn-fondo:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0, 123, 181, 0.35);
+    }
+
     .btn-limpiar {
       background: #b30000;
       color: #fff;
@@ -338,8 +307,7 @@
       color: #dcdcdc;
       line-height: 1.6;
       font-size: 16px; 
-      transition: background-color 0.2s, color 0.2s;
-      /* CORRECCIÓN: Evitamos que las palabras se rompan hacia abajo y permitimos scroll */
+      transition: background-image 0.5s, background-color 0.5s, color 0.5s;
       white-space: nowrap; 
       overflow-x: auto;
       overflow-y: hidden;
@@ -352,9 +320,8 @@
     }
 
     #zona-resultado td {
-      /* CORRECCIÓN: Evita el salto de línea para que los textos sean perfectos en horizontal */
       white-space: nowrap; 
-      vertical-align: middle; /* Mejor alineación */
+      vertical-align: middle; 
       padding: 2px 0;
     }
 
@@ -362,7 +329,6 @@
       color: var(--yellow-bitch) !important;
       font-weight: 900;
       font-size: 1em;
-      text-shadow: 0 0 8px rgba(255, 255, 0, 0.7);
       display: inline-block;
     }
 
@@ -431,7 +397,7 @@
     @media (max-width: 600px) {
       .container { padding: 1.2rem; }
       .top-bar { flex-direction: column; gap: 1rem; }
-      .tasa-panel, .color-panel { width: 100%; justify-content: center; }
+      .tasa-panel { width: 100%; justify-content: center; }
       .tasa-input-row input { width: 90px; font-size: 1.5rem; }
       .btn-incremento { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
     }
@@ -464,12 +430,6 @@
           </button>
         </div>
       </div>
-
-      <div class="color-panel">
-        <label>🎨 Fondo <input type="color" id="bgResultColor" value="#0a0a0a"></label>
-        <label>✏️ Texto <input type="color" id="textResultColor" value="#dcdcdc"></label>
-        <button class="btn-reset" id="resetColorsBtn">↺ Reset</button>
-      </div>
     </div>
 
     <textarea id="entrada" placeholder="Pega tu lista de precios en dólares aquí..." oninput="procesar()"></textarea>
@@ -479,6 +439,7 @@
         <input type="checkbox" id="chkRedondear" checked onchange="procesar()">
         Redondeo (↑)
       </label>
+      <button class="btn-fondo" onclick="aplicarEstiloAleatorio()">🎨 Cambiar Fondo</button>
       <button class="btn-limpiar" onclick="limpiarTodo()">🗑️ Borrar</button>
     </div>
 
@@ -495,9 +456,6 @@
   <script>
     (function() {
       const zonaResultado = document.getElementById('zona-resultado');
-      const bgColorPicker = document.getElementById('bgResultColor');
-      const textColorPicker = document.getElementById('textResultColor');
-      const resetColorsBtn = document.getElementById('resetColorsBtn');
       const tasaInput = document.getElementById('tasa');
       const chkRedondear = document.getElementById('chkRedondear');
       const entradaTextarea = document.getElementById('entrada');
@@ -549,13 +507,55 @@
         
         zona.style.fontSize = currentFontSize + 'px';
 
-        // Ahora como forzamos a que no haya saltos de línea (nowrap), 
-        // el scrollWidth va a calcular perfectamente qué tan ancho es el texto
-        // y lo va a achicar de manera perfecta.
         while ((zona.scrollWidth > zona.clientWidth) && currentFontSize > minFontSize) {
           currentFontSize -= 0.5;
           zona.style.fontSize = currentFontSize + 'px';
         }
+      }
+
+      function aplicarEstiloAleatorio() {
+        // Generación matemática de colores oscuros para contraste (RGB: 5 - 45)
+        const c1 = `rgb(${Math.floor(Math.random() * 40) + 5}, ${Math.floor(Math.random() * 40) + 5}, ${Math.floor(Math.random() * 40) + 5})`;
+        const c2 = `rgb(${Math.floor(Math.random() * 40) + 5}, ${Math.floor(Math.random() * 40) + 5}, ${Math.floor(Math.random() * 40) + 5})`;
+        const c3 = `rgb(${Math.floor(Math.random() * 40) + 5}, ${Math.floor(Math.random() * 40) + 5}, ${Math.floor(Math.random() * 40) + 5})`;
+
+        // Variables geométricas matemáticas
+        const angulo = Math.floor(Math.random() * 360); // 0 a 360 grados
+        const grosor1 = Math.floor(Math.random() * 30) + 10; // 10px a 40px
+        const grosor2 = grosor1 + Math.floor(Math.random() * 30) + 10; // Siguiente escalón
+        const posX = Math.floor(Math.random() * 100); // 0% a 100%
+        const posY = Math.floor(Math.random() * 100); // 0% a 100%
+
+        // Determinación matemática del patrón base (4 tipos)
+        const tipoPatron = Math.floor(Math.random() * 4);
+        let bgImage = '';
+
+        switch(tipoPatron) {
+            case 0: // Patrón Lineal Matemático
+                bgImage = `repeating-linear-gradient(${angulo}deg, ${c1}, ${c1} ${grosor1}px, ${c2} ${grosor1}px, ${c2} ${grosor2}px)`;
+                break;
+            case 1: // Patrón Radial Descentrado Matemáticamente
+                bgImage = `repeating-radial-gradient(circle at ${posX}% ${posY}%, ${c1}, ${c1} ${grosor1}px, ${c2} ${grosor1}px, ${c2} ${grosor2}px)`;
+                break;
+            case 2: // Patrón Cónico (Efecto sol/mosaico angular)
+                const grados1 = Math.floor(Math.random() * 15) + 5; // 5° a 20°
+                const grados2 = grados1 + Math.floor(Math.random() * 15) + 5; // Siguiente ángulo
+                bgImage = `repeating-conic-gradient(from ${angulo}deg at ${posX}% ${posY}%, ${c1} 0deg, ${c1} ${grados1}deg, ${c2} ${grados1}deg, ${c2} ${grados2}deg)`;
+                break;
+            case 3: // Patrón de Cuadrícula Cruzada Matemática (2 capas)
+                bgImage = `
+                  repeating-linear-gradient(${angulo}deg, transparent, transparent ${grosor1}px, ${c1} ${grosor1}px, ${c1} ${grosor2}px),
+                  repeating-linear-gradient(${angulo + 90}deg, ${c2}, ${c2} ${grosor1}px, ${c3} ${grosor1}px, ${c3} ${grosor2}px)
+                `;
+                break;
+        }
+        
+        // Color de texto claro garantizado (RGB: 180 - 255)
+        const textColor = `rgb(${Math.floor(Math.random() * 75) + 180}, ${Math.floor(Math.random() * 75) + 180}, ${Math.floor(Math.random() * 75) + 180})`;
+
+        zonaResultado.style.backgroundColor = c1; 
+        zonaResultado.style.backgroundImage = bgImage;
+        zonaResultado.style.color = textColor;
       }
 
       function procesar() {
@@ -565,6 +565,9 @@
 
         if (!texto.trim()) {
           zonaResultado.style.fontSize = '16px';
+          zonaResultado.style.backgroundImage = 'none';
+          zonaResultado.style.backgroundColor = '#0a0a0a';
+          zonaResultado.style.color = '#dcdcdc';
           zonaResultado.innerHTML = '<span style="color:#555;">Esperando que pegues texto, cabrón...</span>';
           return;
         }
@@ -613,7 +616,7 @@
         });
 
         zonaResultado.innerHTML = `<table style="width: 100%; border-collapse: collapse;">${rowsHtml.join('')}</table>`;
-        
+
         setTimeout(autoAjustarTamanoTexto, 10);
       }
 
@@ -741,21 +744,12 @@
         }
       }
 
-      function aplicarColores() {
-        zonaResultado.style.backgroundColor = bgColorPicker.value;
-        zonaResultado.style.color = textColorPicker.value;
-      }
-      bgColorPicker.addEventListener('input', aplicarColores);
-      textColorPicker.addEventListener('input', aplicarColores);
-      resetColorsBtn.addEventListener('click', () => {
-        bgColorPicker.value = '#0a0a0a';
-        textColorPicker.value = '#dcdcdc';
-        aplicarColores();
-      });
-
       window.limpiarTodo = function() {
         entradaTextarea.value = '';
         zonaResultado.style.fontSize = '16px';
+        zonaResultado.style.backgroundImage = 'none';
+        zonaResultado.style.backgroundColor = '#0a0a0a';
+        zonaResultado.style.color = '#dcdcdc';
         zonaResultado.innerHTML = '<span style="color:#555;">Esperando que pegues texto, cabrón...</span>';
       };
 
@@ -831,6 +825,7 @@
 
       window.procesar = procesar;
       window.obtenerTasaAPI = obtenerTasaAPI;
+      window.aplicarEstiloAleatorio = aplicarEstiloAleatorio;
 
       window.addEventListener('resize', () => {
          if(entradaTextarea.value.trim() !== "") {
@@ -839,7 +834,6 @@
       });
 
       document.addEventListener('DOMContentLoaded', () => {
-        aplicarColores();
         setModoManualCompleto();
         tasaInput.classList.add('manual');
         tasaInput.classList.remove('auto-loaded');
