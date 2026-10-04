@@ -355,18 +355,28 @@
 
     .btn-extra:hover { background: #555; }
 
+    /* --- NUEVOS ESTILOS PARA LA ANIMACIÓN DEL BOTÓN DE DESCARGA --- */
     .btn-extra.cargando {
-      color: transparent;
+      color: transparent; /* Oculta el texto original */
       pointer-events: none;
+      background: #444;
     }
 
     .btn-extra.cargando::after {
-      content: "⌛ Espera...";
+      content: "⌛ Generando imágenes...";
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
       color: #fff;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      animation: pulsoAnimado 1s infinite alternate;
+    }
+
+    @keyframes pulsoAnimado {
+      0% { opacity: 0.4; }
+      100% { opacity: 1; }
     }
 
     .toast {
@@ -467,7 +477,6 @@
 
       let tasaOrigen = 'manual';     
       let intervaloActualizacion = null;
-      let patronActual = null; 
 
       function mostrarToast(mensaje, esError = false) {
         toast.textContent = mensaje;
@@ -515,173 +524,81 @@
         }
       }
 
-      function aplicarEstiloAleatorio() {
-        // Colores HSL: Alta saturación (50-100%), baja luminosidad (8-22%) para contraste oscuro pero muy vivo
-        const h1 = Math.floor(Math.random() * 360);
-        const c1 = `hsl(${h1}, ${Math.floor(Math.random() * 50) + 50}%, ${Math.floor(Math.random() * 14) + 8}%)`;
-        const c2 = `hsl(${(h1 + Math.floor(Math.random() * 180)) % 360}, ${Math.floor(Math.random() * 50) + 50}%, ${Math.floor(Math.random() * 14) + 8}%)`;
-        
-        // Transparencias para superposiciones caóticas
-        const c3 = `hsla(${(h1 + Math.floor(Math.random() * 270)) % 360}, ${Math.floor(Math.random() * 50) + 50}%, ${Math.floor(Math.random() * 14) + 8}%, 0.6)`;
-        const c4 = `hsla(${(h1 + Math.floor(Math.random() * 90)) % 360}, ${Math.floor(Math.random() * 50) + 50}%, ${Math.floor(Math.random() * 14) + 8}%, 0.6)`;
+      // --- NUEVO GENERADOR DE FONDOS CAÓTICOS ---
+      function crearFondoCaotico() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1600; // Alta resolución para que no pierda calidad
+        canvas.height = 1200;
+        const ctx = canvas.getContext('2d');
 
-        // Geometría mucho más extrema
-        const angulo = Math.floor(Math.random() * 360);
-        const grosor1 = Math.floor(Math.random() * 60) + 10; // 10 a 70
-        const grosor2 = grosor1 + Math.floor(Math.random() * 60) + 10;
-        const grosor3 = Math.floor(Math.random() * 50) + 15;
-        const grosor4 = grosor3 + Math.floor(Math.random() * 50) + 15;
-        
-        const posX = Math.floor(Math.random() * 100);
-        const posY = Math.floor(Math.random() * 100);
-        const grados1 = Math.floor(Math.random() * 15) + 5;
-        const grados2 = grados1 + Math.floor(Math.random() * 15) + 5;
+        // 1. Fondo base oscuro y vibrante
+        const hBase = Math.floor(Math.random() * 360);
+        ctx.fillStyle = `hsl(${hBase}, 80%, 10%)`; // Oscuro para dar contraste al texto
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Ahora tenemos 6 patrones en lugar de 4
-        const tipoPatron = Math.floor(Math.random() * 6);
-        let bgImage = '';
+        // 2. Manchas caóticas estilo nebulosa/acuarela
+        const numManchas = Math.floor(Math.random() * 25) + 15;
+        for (let i = 0; i < numManchas; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const r = Math.random() * 700 + 150;
 
-        switch(tipoPatron) {
-            case 0: // Líneas puras
-                bgImage = `repeating-linear-gradient(${angulo}deg, ${c1}, ${c1} ${grosor1}px, ${c2} ${grosor1}px, ${c2} ${grosor2}px)`;
-                break;
-            case 1: // Radial puro
-                bgImage = `repeating-radial-gradient(circle at ${posX}% ${posY}%, ${c1}, ${c1} ${grosor1}px, ${c2} ${grosor1}px, ${c2} ${grosor2}px)`;
-                break;
-            case 2: // Cónico
-                bgImage = `repeating-conic-gradient(from ${angulo}deg at ${posX}% ${posY}%, ${c1} 0deg, ${c1} ${grados1}deg, ${c2} ${grados1}deg, ${c2} ${grados2}deg)`;
-                break;
-            case 3: // Cuadrícula estricta cruzada
-                bgImage = `
-                  repeating-linear-gradient(${angulo}deg, transparent, transparent ${grosor1}px, ${c1} ${grosor1}px, ${c1} ${grosor2}px),
-                  repeating-linear-gradient(${angulo + 90}deg, ${c2}, ${c2} ${grosor3}px, ${c3} ${grosor3}px, ${c3} ${grosor4}px)
-                `;
-                break;
-            case 4: // Tartán / Tela de araña (superposición caótica)
-                bgImage = `
-                  repeating-linear-gradient(${angulo}deg, transparent, transparent ${grosor1}px, ${c3} ${grosor1}px, ${c3} ${grosor2}px),
-                  repeating-linear-gradient(${angulo + 90}deg, transparent, transparent ${grosor3}px, ${c4} ${grosor3}px, ${c4} ${grosor4}px)
-                `;
-                break;
-            case 5: // Hexágonos/Triángulos superpuestos (Isométrico)
-                bgImage = `
-                  repeating-linear-gradient(${angulo}deg, transparent, transparent ${grosor1}px, ${c4} ${grosor1}px, ${c4} ${grosor2}px),
-                  repeating-linear-gradient(${angulo + 60}deg, transparent, transparent ${grosor1}px, ${c3} ${grosor1}px, ${c3} ${grosor2}px),
-                  repeating-linear-gradient(${angulo + 120}deg, transparent, transparent ${grosor1}px, ${c2} ${grosor1}px, ${c2} ${grosor2}px)
-                `;
-                break;
+            // Colores abstractos derivados del tono base
+            const h = (hBase + (Math.random() * 200 - 100) + 360) % 360;
+            const s = Math.floor(Math.random() * 60) + 40;
+            const l = Math.floor(Math.random() * 20) + 12; 
+
+            const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+            grad.addColorStop(0, `hsla(${h}, ${s}%, ${l}%, 0.85)`);
+            grad.addColorStop(1, `hsla(${h}, ${s}%, ${l}%, 0)`);
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
         }
+
+        // 3. Líneas curvas aleatorias y abstractas
+        const numCurvas = Math.floor(Math.random() * 15) + 5;
+        for (let i = 0; i < numCurvas; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+            ctx.bezierCurveTo(
+                Math.random() * canvas.width, Math.random() * canvas.height,
+                Math.random() * canvas.width, Math.random() * canvas.height,
+                Math.random() * canvas.width, Math.random() * canvas.height
+            );
+            const h = Math.floor(Math.random() * 360);
+            ctx.strokeStyle = `hsla(${h}, 80%, 30%, 0.35)`;
+            ctx.lineWidth = Math.random() * 100 + 20;
+            ctx.stroke();
+        }
+
+        // 4. Salpicaduras caóticas (ruido estelar)
+        for (let i = 0; i < 400; i++) {
+            ctx.fillStyle = `hsla(${Math.random() * 360}, 100%, 75%, ${Math.random() * 0.25})`;
+            ctx.beginPath();
+            ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        return canvas.toDataURL('image/png');
+      }
+
+      function aplicarEstiloAleatorio() {
+        const bgImage = `url(${crearFondoCaotico()})`;
         
         // Color del texto: Tono aleatorio, máxima luminosidad para asegurar lectura.
         const textColor = `hsl(${Math.floor(Math.random() * 360)}, ${Math.floor(Math.random() * 40) + 60}%, 92%)`;
 
-        zonaResultado.style.backgroundColor = c1; 
+        // Se aplica la imagen base64 como fondo, garantizando que el canvas lo renderice perfecto
         zonaResultado.style.backgroundImage = bgImage;
-        zonaResultado.style.backgroundSize = '';
-        zonaResultado.style.backgroundRepeat = '';
+        zonaResultado.style.backgroundSize = 'cover';
+        zonaResultado.style.backgroundPosition = 'center';
+        zonaResultado.style.backgroundRepeat = 'no-repeat';
+        zonaResultado.style.backgroundColor = '#0a0a0a'; 
         zonaResultado.style.color = textColor;
-        zonaResultado.style.textShadow = '2px 2px 4px rgba(0,0,0,0.85)'; // Extra sombra por si el fondo es intenso
-
-        patronActual = { tipoPatron, c1, c2, c3, c4, angulo, grosor1, grosor2, grosor3, grosor4, posX, posY, grados1, grados2 };
-      }
-
-      function dibujarRayas(ctx, ancho, alto, anguloGrados, grosorA, grosorB, colorA, colorB, soloColorB) {
-        const diag = Math.ceil(Math.sqrt(ancho * ancho + alto * alto)) + grosorB * 2;
-        ctx.save();
-        ctx.translate(ancho / 2, alto / 2);
-        ctx.rotate(anguloGrados * Math.PI / 180);
-        let y = -diag / 2;
-        let i = 0;
-        while (y < diag / 2) {
-          const franja = (i % 2 === 0) ? grosorA : (grosorB - grosorA);
-          const esSegundoColor = i % 2 === 1;
-          if (!soloColorB || esSegundoColor) {
-            ctx.fillStyle = esSegundoColor ? colorB : colorA;
-            ctx.fillRect(-diag / 2, y - 0.5, diag, franja + 1); 
-          }
-          y += franja;
-          i++;
-        }
-        ctx.restore();
-      }
-
-      function dibujarAnillos(ctx, ancho, alto, posX, posY, grosor1, grosor2, c2) {
-        const cx = ancho * posX / 100;
-        const cy = alto * posY / 100;
-        const distEsquina = Math.max(
-          Math.hypot(cx, cy), Math.hypot(ancho - cx, cy),
-          Math.hypot(cx, alto - cy), Math.hypot(ancho - cx, alto - cy)
-        );
-        const maxR = Math.ceil(distEsquina) + grosor2;
-        let r = 0;
-        let i = 0;
-        while (r < maxR) {
-          const franja = (i % 2 === 0) ? grosor1 : (grosor2 - grosor1);
-          if (i % 2 === 1) {
-            ctx.beginPath();
-            ctx.fillStyle = c2;
-            ctx.arc(cx, cy, r + franja, 0, Math.PI * 2);
-            ctx.arc(cx, cy, Math.max(r - 0.5, 0), 0, Math.PI * 2, true);
-            ctx.fill('evenodd');
-          }
-          r += franja;
-          i++;
-        }
-      }
-
-      function dibujarConico(ctx, ancho, alto, posX, posY, anguloInicial, grados1, grados2, c1, c2) {
-        const cx = ancho * posX / 100;
-        const cy = alto * posY / 100;
-        const maxR = Math.ceil(Math.sqrt(ancho * ancho + alto * alto)) + 10;
-        const periodo = grados2;
-        let anguloActual = anguloInicial;
-        let i = 0;
-        while (anguloActual < anguloInicial + 360 + periodo) {
-          const franja = (i % 2 === 0) ? grados1 : (grados2 - grados1);
-          const a0 = anguloActual * Math.PI / 180;
-          const a1 = (anguloActual + franja) * Math.PI / 180;
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.arc(cx, cy, maxR, a0, a1);
-          ctx.closePath();
-          ctx.fillStyle = (i % 2 === 0) ? c1 : c2;
-          ctx.fill();
-          anguloActual += franja;
-          i++;
-        }
-      }
-
-      function generarPatronDataURL(ancho, alto, p) {
-        ancho = Math.max(1, Math.round(ancho));
-        alto = Math.max(1, Math.round(alto));
-        const canvas = document.createElement('canvas');
-        canvas.width = ancho;
-        canvas.height = alto;
-        const ctx = canvas.getContext('2d');
-
-        // Color base
-        ctx.fillStyle = p.c1;
-        ctx.fillRect(0, 0, ancho, alto);
-
-        if (p.tipoPatron === 0) {
-          dibujarRayas(ctx, ancho, alto, p.angulo, p.grosor1, p.grosor2, p.c1, p.c2);
-        } else if (p.tipoPatron === 1) {
-          dibujarAnillos(ctx, ancho, alto, p.posX, p.posY, p.grosor1, p.grosor2, p.c2);
-        } else if (p.tipoPatron === 2) {
-          dibujarConico(ctx, ancho, alto, p.posX, p.posY, p.angulo, p.grados1, p.grados2, p.c1, p.c2);
-        } else if (p.tipoPatron === 3) {
-          dibujarRayas(ctx, ancho, alto, p.angulo + 90, p.grosor3, p.grosor4, p.c2, p.c3);
-          dibujarRayas(ctx, ancho, alto, p.angulo, p.grosor1, p.grosor2, null, p.c1, true);
-        } else if (p.tipoPatron === 4) {
-          dibujarRayas(ctx, ancho, alto, p.angulo + 90, p.grosor3, p.grosor4, null, p.c4, true);
-          dibujarRayas(ctx, ancho, alto, p.angulo, p.grosor1, p.grosor2, null, p.c3, true);
-        } else if (p.tipoPatron === 5) {
-          dibujarRayas(ctx, ancho, alto, p.angulo + 120, p.grosor1, p.grosor2, null, p.c2, true);
-          dibujarRayas(ctx, ancho, alto, p.angulo + 60, p.grosor1, p.grosor2, null, p.c3, true);
-          dibujarRayas(ctx, ancho, alto, p.angulo, p.grosor1, p.grosor2, null, p.c4, true);
-        }
-
-        return canvas.toDataURL('image/png');
+        zonaResultado.style.textShadow = '2px 2px 5px rgba(0,0,0,0.95)'; // Sombra fuerte
       }
 
       function procesar() {
@@ -912,59 +829,41 @@
           alert('¡Convierte algo antes de capturar!');
           return;
         }
+        
+        // Colocamos el botón en estado de carga con la nueva animación
         btnImg.classList.add('cargando');
 
-        const fondoOriginal = {
-          backgroundImage: zonaResultado.style.backgroundImage,
-          backgroundSize: zonaResultado.style.backgroundSize,
-          backgroundRepeat: zonaResultado.style.backgroundRepeat
-        };
-
-        if (patronActual) {
-          const factor = 2; 
-          const anchoReal = zonaResultado.offsetWidth;
-          const altoReal = zonaResultado.offsetHeight;
-          const dataURL = generarPatronDataURL(anchoReal * factor, altoReal * factor, patronActual);
-          zonaResultado.style.backgroundImage = `url(${dataURL})`;
-          zonaResultado.style.backgroundSize = `${anchoReal}px ${altoReal}px`;
-          zonaResultado.style.backgroundRepeat = 'no-repeat';
-        }
-
-        const restaurarFondo = () => {
-          zonaResultado.style.backgroundImage = fondoOriginal.backgroundImage;
-          zonaResultado.style.backgroundSize = fondoOriginal.backgroundSize;
-          zonaResultado.style.backgroundRepeat = fondoOriginal.backgroundRepeat;
-        };
-
-        html2canvas(zonaResultado, {
-          backgroundColor: null,
-          scale: 2,
-          logging: false,
-          useCORS: true,
-          allowTaint: true
-        }).then(canvas => {
-          restaurarFondo();
-          canvas.toBlob(blob => {
-            if (!blob) {
-              alert('Error al generar la imagen.');
+        // IMPORTANTE: Un pequeño delay de 100ms para permitir que el navegador dibuje 
+        // la animación de "Generando imágenes..." ANTES de que html2canvas congele la página.
+        setTimeout(() => {
+          html2canvas(zonaResultado, {
+            backgroundColor: '#0a0a0a',
+            scale: 2,
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+          }).then(canvas => {
+            canvas.toBlob(blob => {
+              if (!blob) {
+                alert('Error al generar la imagen.');
+                btnImg.classList.remove('cargando');
+                return;
+              }
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.download = 'Precios_Cotizador.png';
+              a.href = url;
+              a.click();
+              setTimeout(() => URL.revokeObjectURL(url), 100);
               btnImg.classList.remove('cargando');
-              return;
-            }
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.download = 'Precios_Cotizador.png';
-            a.href = url;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+              mostrarToast('📸 Imagen guardada exitosamente.');
+            }, 'image/png');
+          }).catch(err => {
+            console.error('html2canvas error:', err);
+            alert('Error técnico al generar la imagen.');
             btnImg.classList.remove('cargando');
-            mostrarToast('📸 Imagen guardada.');
-          }, 'image/png');
-        }).catch(err => {
-          restaurarFondo();
-          console.error('html2canvas error:', err);
-          alert('Error técnico al generar la imagen.');
-          btnImg.classList.remove('cargando');
-        });
+          });
+        }, 100);
       };
 
       window.procesar = procesar;
