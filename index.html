@@ -24,7 +24,7 @@
       font-family: 'Segoe UI', 'Arial', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -230,13 +230,14 @@
 
     .botones-medio {
       display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+      gap: 0.5rem; 
+      flex-wrap: nowrap; 
+      justify-content: space-between;
     }
 
     .botones-medio>* {
-      flex: 1 1 180px;
-      padding: 0.9rem;
+      flex: 1; 
+      padding: 0.8rem 0.2rem; 
       font-weight: 700;
       border: none;
       border-radius: 0.6rem;
@@ -246,17 +247,21 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.95rem;
+      font-size: 0.75rem; 
+      text-align: center;
+      line-height: 1.1;
     }
 
+    /* ESTADO DESACTIVADO DEL BOTÓN DE REDONDEO */
     .btn-redondeo {
       background: #2a2a2a;
       color: #666;
-      gap: 0.6rem;
       border: 1px solid #444;
       opacity: 0.7;
+      user-select: none; /* Evita que se seleccione el texto al tocar rápido */
     }
 
+    /* ESTADO ACTIVADO DEL BOTÓN DE REDONDEO */
     .btn-redondeo:has(input:checked) {
       background: var(--accent);
       color: #fff;
@@ -265,10 +270,9 @@
       box-shadow: 0 4px 12px rgba(0, 123, 181, 0.35);
     }
 
+    /* OCULTAMOS EL CUADRADITO DEL CHECKBOX PERO MANTIENE SU FUNCIÓN */
     .btn-redondeo input[type="checkbox"] {
-      transform: scale(1.5);
-      accent-color: #000;
-      cursor: pointer;
+      display: none; 
     }
 
     .btn-fondo {
@@ -336,7 +340,7 @@
     .botones-extra {
       display: flex;
       gap: 0.8rem;
-      flex-wrap: wrap;
+      flex-wrap: wrap; 
     }
 
     .btn-extra {
@@ -355,15 +359,14 @@
 
     .btn-extra:hover { background: #555; }
 
-    /* --- NUEVOS ESTILOS PARA LA ANIMACIÓN DEL BOTÓN DE DESCARGA --- */
     .btn-extra.cargando {
-      color: transparent; /* Oculta el texto original */
+      color: transparent; 
       pointer-events: none;
       background: #444;
     }
 
     .btn-extra.cargando::after {
-      content: "⌛ Generando imágenes...";
+      content: "⌛ Generando...";
       position: absolute;
       left: 50%;
       top: 50%;
@@ -411,6 +414,8 @@
       .tasa-panel { width: 100%; justify-content: center; }
       .tasa-input-row input { width: 90px; font-size: 1.5rem; }
       .btn-incremento { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+      .botones-medio { gap: 0.3rem; }
+      .botones-medio>* { font-size: 0.65rem; padding: 0.6rem 0.1rem; }
     }
   </style>
 </head>
@@ -445,12 +450,13 @@
 
     <textarea id="entrada" placeholder="Pega tu lista de precios en dólares aquí..." oninput="procesar()"></textarea>
 
+    <!-- BOTONES DEL MEDIO -->
     <div class="botones-medio">
       <label class="btn-redondeo" title="Redondea a .00 o .50 para ganar, nunca perder">
         <input type="checkbox" id="chkRedondear" checked onchange="procesar()">
         Redondeo (↑)
       </label>
-      <button class="btn-fondo" onclick="aplicarEstiloAleatorio()">🎨 Cambiar Fondo</button>
+      <button class="btn-fondo" onclick="aplicarEstiloAleatorio()">🎨 Fondo</button>
       <button class="btn-limpiar" onclick="limpiarTodo()">🗑️ Borrar</button>
     </div>
 
@@ -524,26 +530,22 @@
         }
       }
 
-      // --- NUEVO GENERADOR DE FONDOS CAÓTICOS ---
       function crearFondoCaotico() {
         const canvas = document.createElement('canvas');
-        canvas.width = 1600; // Alta resolución para que no pierda calidad
-        canvas.height = 1200;
+        canvas.width = 800; 
+        canvas.height = 600;
         const ctx = canvas.getContext('2d');
 
-        // 1. Fondo base oscuro y vibrante
         const hBase = Math.floor(Math.random() * 360);
-        ctx.fillStyle = `hsl(${hBase}, 80%, 10%)`; // Oscuro para dar contraste al texto
+        ctx.fillStyle = `hsl(${hBase}, 80%, 10%)`; 
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Manchas caóticas estilo nebulosa/acuarela
-        const numManchas = Math.floor(Math.random() * 25) + 15;
+        const numManchas = Math.floor(Math.random() * 12) + 8;
         for (let i = 0; i < numManchas; i++) {
             const x = Math.random() * canvas.width;
             const y = Math.random() * canvas.height;
-            const r = Math.random() * 700 + 150;
+            const r = Math.random() * 350 + 100;
 
-            // Colores abstractos derivados del tono base
             const h = (hBase + (Math.random() * 200 - 100) + 360) % 360;
             const s = Math.floor(Math.random() * 60) + 40;
             const l = Math.floor(Math.random() * 20) + 12; 
@@ -558,8 +560,7 @@
             ctx.fill();
         }
 
-        // 3. Líneas curvas aleatorias y abstractas
-        const numCurvas = Math.floor(Math.random() * 15) + 5;
+        const numCurvas = Math.floor(Math.random() * 8) + 3;
         for (let i = 0; i < numCurvas; i++) {
             ctx.beginPath();
             ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
@@ -570,12 +571,11 @@
             );
             const h = Math.floor(Math.random() * 360);
             ctx.strokeStyle = `hsla(${h}, 80%, 30%, 0.35)`;
-            ctx.lineWidth = Math.random() * 100 + 20;
+            ctx.lineWidth = Math.random() * 50 + 10;
             ctx.stroke();
         }
 
-        // 4. Salpicaduras caóticas (ruido estelar)
-        for (let i = 0; i < 400; i++) {
+        for (let i = 0; i < 150; i++) {
             ctx.fillStyle = `hsla(${Math.random() * 360}, 100%, 75%, ${Math.random() * 0.25})`;
             ctx.beginPath();
             ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 3, 0, Math.PI * 2);
@@ -588,17 +588,15 @@
       function aplicarEstiloAleatorio() {
         const bgImage = `url(${crearFondoCaotico()})`;
         
-        // Color del texto: Tono aleatorio, máxima luminosidad para asegurar lectura.
         const textColor = `hsl(${Math.floor(Math.random() * 360)}, ${Math.floor(Math.random() * 40) + 60}%, 92%)`;
 
-        // Se aplica la imagen base64 como fondo, garantizando que el canvas lo renderice perfecto
         zonaResultado.style.backgroundImage = bgImage;
         zonaResultado.style.backgroundSize = 'cover';
         zonaResultado.style.backgroundPosition = 'center';
         zonaResultado.style.backgroundRepeat = 'no-repeat';
         zonaResultado.style.backgroundColor = '#0a0a0a'; 
         zonaResultado.style.color = textColor;
-        zonaResultado.style.textShadow = '2px 2px 5px rgba(0,0,0,0.95)'; // Sombra fuerte
+        zonaResultado.style.textShadow = '2px 2px 5px rgba(0,0,0,0.95)';
       }
 
       function procesar() {
@@ -801,7 +799,7 @@
         area.select();
         try {
           const ok = document.execCommand('copy');
-          mostrarToast(ok ? '📋 ¡Texto copiado!' : '⚠️ No se pudo copiar.', !ok);
+          mostrarToast(ok ? '📋 ¡Texto copiado!' : '⚠ No se pudo copiar.', !ok);
         } catch (e) {
           mostrarToast('⚠️ Error al copiar. Hazlo manualmente.', true);
         }
@@ -830,15 +828,12 @@
           return;
         }
         
-        // Colocamos el botón en estado de carga con la nueva animación
         btnImg.classList.add('cargando');
 
-        // IMPORTANTE: Un pequeño delay de 100ms para permitir que el navegador dibuje 
-        // la animación de "Generando imágenes..." ANTES de que html2canvas congele la página.
         setTimeout(() => {
           html2canvas(zonaResultado, {
             backgroundColor: '#0a0a0a',
-            scale: 2,
+            scale: 1.5,
             logging: false,
             useCORS: true,
             allowTaint: true
@@ -869,6 +864,12 @@
       window.procesar = procesar;
       window.obtenerTasaAPI = obtenerTasaAPI;
       window.aplicarEstiloAleatorio = aplicarEstiloAleatorio;
+
+      entradaTextarea.addEventListener('blur', () => {
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollTop, behavior: 'instant' });
+        }, 50);
+      });
 
       window.addEventListener('resize', () => {
          if(entradaTextarea.value.trim() !== "") {
