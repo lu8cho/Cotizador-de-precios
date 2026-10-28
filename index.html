@@ -2,14 +2,15 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <!-- ← CAMBIO 1: interactive-widget=overlays-content evita que el teclado redimensione/mueva la página -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content" />
   <title>Cotizador</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
     :root {
-      --accent: #007bb5; /* Celeste oscuro */
-      --yellow-bitch: #ffff00; /* Amarillo puro */
+      --accent: #007bb5;
+      --yellow-bitch: #ffff00;
       --bg: #050505;
       --surface: #111;
       --panel: #1a1a1a;
@@ -27,13 +28,14 @@
       min-height: 100dvh;
       display: flex;
       justify-content: center;
-      align-items: center;
+      /* ← CAMBIO 2: se quita "align-items: center" para evitar que el contenido se recorte por arriba cuando el teclado se abre */
       padding: 1.5rem;
     }
 
     .container {
       max-width: 950px;
       width: 100%;
+      margin: auto; /* ← CAMBIO 3: centra verticalmente solo si sobra espacio; si no sobra, no recorta */
       background: var(--surface);
       padding: 2rem;
       border-radius: 1.5rem;
@@ -230,14 +232,14 @@
 
     .botones-medio {
       display: flex;
-      gap: 0.5rem; 
-      flex-wrap: nowrap; 
+      gap: 0.5rem;
+      flex-wrap: nowrap;
       justify-content: space-between;
     }
 
     .botones-medio>* {
-      flex: 1; 
-      padding: 0.8rem 0.2rem; 
+      flex: 1;
+      padding: 0.8rem 0.2rem;
       font-weight: 700;
       border: none;
       border-radius: 0.6rem;
@@ -247,21 +249,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem; 
+      font-size: 0.75rem;
       text-align: center;
       line-height: 1.1;
     }
 
-    /* ESTADO DESACTIVADO DEL BOTÓN DE REDONDEO */
     .btn-redondeo {
       background: #2a2a2a;
       color: #666;
       border: 1px solid #444;
       opacity: 0.7;
-      user-select: none; /* Evita que se seleccione el texto al tocar rápido */
+      user-select: none;
     }
 
-    /* ESTADO ACTIVADO DEL BOTÓN DE REDONDEO */
     .btn-redondeo:has(input:checked) {
       background: var(--accent);
       color: #fff;
@@ -270,9 +270,8 @@
       box-shadow: 0 4px 12px rgba(0, 123, 181, 0.35);
     }
 
-    /* OCULTAMOS EL CUADRADITO DEL CHECKBOX PERO MANTIENE SU FUNCIÓN */
     .btn-redondeo input[type="checkbox"] {
-      display: none; 
+      display: none;
     }
 
     .btn-fondo {
@@ -307,12 +306,12 @@
       font-family: 'Impact', 'Arial Black', 'Arial Narrow', sans-serif;
       font-weight: 900;
       letter-spacing: 0.3px;
-      min-height: auto; 
+      min-height: auto;
       color: #dcdcdc;
       line-height: 1.6;
-      font-size: 16px; 
+      font-size: 16px;
       transition: background-image 0.5s, background-color 0.5s, color 0.5s;
-      white-space: nowrap; 
+      white-space: nowrap;
       overflow-x: auto;
       overflow-y: hidden;
     }
@@ -324,8 +323,8 @@
     }
 
     #zona-resultado td {
-      white-space: nowrap; 
-      vertical-align: middle; 
+      white-space: nowrap;
+      vertical-align: middle;
       padding: 2px 0;
     }
 
@@ -340,7 +339,7 @@
     .botones-extra {
       display: flex;
       gap: 0.8rem;
-      flex-wrap: wrap; 
+      flex-wrap: wrap;
     }
 
     .btn-extra {
@@ -360,7 +359,7 @@
     .btn-extra:hover { background: #555; }
 
     .btn-extra.cargando {
-      color: transparent; 
+      color: transparent;
       pointer-events: none;
       background: #444;
     }
@@ -450,7 +449,6 @@
 
     <textarea id="entrada" placeholder="Pega tu lista de precios en dólares aquí..." oninput="procesar()"></textarea>
 
-    <!-- BOTONES DEL MEDIO -->
     <div class="botones-medio">
       <label class="btn-redondeo" title="Redondea a .00 o .50 para ganar, nunca perder">
         <input type="checkbox" id="chkRedondear" checked onchange="procesar()">
@@ -481,7 +479,7 @@
       const tasaLabels = document.getElementById('tasaLabel');
       const toast = document.getElementById('toast');
 
-      let tasaOrigen = 'manual';     
+      let tasaOrigen = 'manual';
       let intervaloActualizacion = null;
 
       function mostrarToast(mensaje, esError = false) {
@@ -501,7 +499,7 @@
         if (tasaOrigen !== 'manual') {
           tasaOrigen = 'manual';
         }
-        tasaDot.className = 'dot';           
+        tasaDot.className = 'dot';
         tasaLabels.textContent = 'Manual';
         tasaInput.classList.add('manual');
         tasaInput.classList.remove('auto-loaded');
@@ -509,19 +507,19 @@
 
       function autoAjustarTamanoTexto() {
         const zona = document.getElementById('zona-resultado');
-        
-        let currentFontSize = 35; 
-        const minFontSize = 10;   
-        
+
+        let currentFontSize = 35;
+        const minFontSize = 10;
+
         zona.style.fontSize = currentFontSize + 'px';
-        
+
         const lineasTotales = zona.querySelectorAll('tr').length || 1;
-        
+
         if (lineasTotales > 10) currentFontSize = 28;
         if (lineasTotales > 20) currentFontSize = 22;
         if (lineasTotales > 30) currentFontSize = 16;
         if (lineasTotales > 40) currentFontSize = 12;
-        
+
         zona.style.fontSize = currentFontSize + 'px';
 
         while ((zona.scrollWidth > zona.clientWidth) && currentFontSize > minFontSize) {
@@ -532,12 +530,12 @@
 
       function crearFondoCaotico() {
         const canvas = document.createElement('canvas');
-        canvas.width = 800; 
+        canvas.width = 800;
         canvas.height = 600;
         const ctx = canvas.getContext('2d');
 
         const hBase = Math.floor(Math.random() * 360);
-        ctx.fillStyle = `hsl(${hBase}, 80%, 10%)`; 
+        ctx.fillStyle = `hsl(${hBase}, 80%, 10%)`;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const numManchas = Math.floor(Math.random() * 12) + 8;
@@ -548,7 +546,7 @@
 
             const h = (hBase + (Math.random() * 200 - 100) + 360) % 360;
             const s = Math.floor(Math.random() * 60) + 40;
-            const l = Math.floor(Math.random() * 20) + 12; 
+            const l = Math.floor(Math.random() * 20) + 12;
 
             const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
             grad.addColorStop(0, `hsla(${h}, ${s}%, ${l}%, 0.85)`);
@@ -587,14 +585,14 @@
 
       function aplicarEstiloAleatorio() {
         const bgImage = `url(${crearFondoCaotico()})`;
-        
+
         const textColor = `hsl(${Math.floor(Math.random() * 360)}, ${Math.floor(Math.random() * 40) + 60}%, 92%)`;
 
         zonaResultado.style.backgroundImage = bgImage;
         zonaResultado.style.backgroundSize = 'cover';
         zonaResultado.style.backgroundPosition = 'center';
         zonaResultado.style.backgroundRepeat = 'no-repeat';
-        zonaResultado.style.backgroundColor = '#0a0a0a'; 
+        zonaResultado.style.backgroundColor = '#0a0a0a';
         zonaResultado.style.color = textColor;
         zonaResultado.style.textShadow = '2px 2px 5px rgba(0,0,0,0.95)';
       }
@@ -618,7 +616,7 @@
 
         const regexMoneda = /(?:\$|USD|usd)\s?([\d,.]+)|([\d,.]+)\s?(?:\$|USD|usd)/g;
         const lineas = texto.split('\n');
-        
+
         const rowsHtml = lineas.map(linea => {
           let modificada = false;
           const lineaConvertida = linea.replace(regexMoneda, (match, p1, p2) => {
@@ -646,8 +644,8 @@
                 `<td style="text-align:right;">${rest}</td>` +
                 `</tr>`;
             }
-          } 
-          
+          }
+
           return `<tr>` +
             `<td colspan="2" style="text-align: center; padding-top: 0.8em; padding-bottom: 0.3em;">${lineaConvertida || '&nbsp;'}</td>` +
             `</tr>`;
@@ -679,7 +677,7 @@
         let nuevoValor = current + 0.10;
         nuevoValor = Math.round(nuevoValor * 100) / 100;
         tasaInput.value = nuevoValor.toFixed(2);
-        
+
         setModoManualCompleto();
         tasaInput.classList.add('manual');
         tasaInput.classList.remove('auto-loaded');
@@ -710,7 +708,7 @@
       function aplicarTasa(precio) {
         const precioStr = precio.toFixed(2);
         tasaInput.value = precioStr;
-        
+
         if (intervaloActualizacion) {
           clearInterval(intervaloActualizacion);
           intervaloActualizacion = null;
@@ -721,14 +719,14 @@
         tasaInput.classList.add('auto-loaded');
         tasaInput.classList.remove('manual');
         procesar();
-        
+
         if (intervaloActualizacion) clearInterval(intervaloActualizacion);
         intervaloActualizacion = setInterval(() => {
           if (tasaOrigen === 'auto') {
             obtenerTasaSilenciosa();
           }
         }, 45000);
-        
+
         mostrarToast(`✅ Tasa actualizada: 1 USDT = ${precioStr} BOB`);
       }
 
@@ -827,7 +825,7 @@
           alert('¡Convierte algo antes de capturar!');
           return;
         }
-        
+
         btnImg.classList.add('cargando');
 
         setTimeout(() => {
@@ -865,10 +863,15 @@
       window.obtenerTasaAPI = obtenerTasaAPI;
       window.aplicarEstiloAleatorio = aplicarEstiloAleatorio;
 
+      // ← CAMBIO 4: red de seguridad SOLO para navegadores viejos sin overlays-content.
+      // Si el navegador soporta interactive-widget=overlays-content, esto nunca se ejecuta
+      // porque la página no se mueve y no hay scroll fantasma.
       entradaTextarea.addEventListener('blur', () => {
         setTimeout(() => {
-          window.scrollTo({ top: document.body.scrollTop, behavior: 'instant' });
-        }, 50);
+          if (document.documentElement.scrollHeight <= window.innerHeight + 5) {
+            window.scrollTo(0, 0);
+          }
+        }, 150);
       });
 
       window.addEventListener('resize', () => {
